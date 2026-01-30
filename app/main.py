@@ -29,6 +29,9 @@ app = FastAPI(
 setup_logging()
 
 # 注册所有路由器
+from app.api.v1 import product_mgmt, version_mgmt
+app.include_router(product_mgmt.router)
+app.include_router(version_mgmt.router)
 
 # 配置CORS中间件 - 直接使用FastAPI内置的CORSMiddleware
 app.add_middleware(
