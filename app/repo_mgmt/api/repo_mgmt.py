@@ -1,0 +1,148 @@
+from typing import List
+from fastapi import APIRouter, Depends, HTTPException, status, Query, UploadFile, File, Form
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.infrastructure.database import get_db
+from app.repo_mgmt.schemes.repo_mgmt import CreateRepositoryFromUrl, UpdateRepository, RepositoryInfo
+from app.repo_mgmt.services.repo_mgmt_service import RepoMgmtService
+
+router = APIRouter(prefix="/api/v1/repositories", tags=["仓库管理"])
+
+
+@router.post("/create/url", response_model=RepositoryInfo)
+async def create_repository_from_url(
+    create_data: CreateRepositoryFromUrl,
+    user_id: str = Query(..., description="用户ID"),
+    db: AsyncSession = Depends(get_db),
+):
+    """通过Git URL创建仓库"""
+    try:
+        repository = await RepoMgmtService.create_repository_from_url(db, user_id, create_data)
+        return RepositoryInfo.model_validate(repository)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
+@router.post("/create/package", response_model=RepositoryInfo)
+async def create_repository_from_package(
+    file: UploadFile = File(..., description="压缩包文件"),
+    name: str = Form(..., description="仓库名称"),
+    description: str = Form("", description="仓库描述"),
+    user_id: str = Form(..., description="用户ID"),
+    db: AsyncSession = Depends(get_db),
+):
+    """通过上传压缩包创建仓库"""
+    try:
+        if not file.filename or not file.filename.endswith((".zip", ".tar.gz", ".tar")):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="只支持zip、tar.gz、tar格式的压缩包",
+            )
+        repository = await RepoMgmtService.create_repository_from_package(db, user_id, name, description, file)
+        return RepositoryInfo.model_validate(repository)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
+@router.post("/create/path", response_model=RepositoryInfo)
+async def create_repository_from_path(
+    name: str = Form(..., description="仓库名称"),
+    description: str = Form("", description="仓库描述"),
+    folder_path: str = Form(..., description="服务端路径"),
+    user_id: str = Form(..., description="用户ID"),
+    db: AsyncSession = Depends(get_db),
+):
+    """通过指定服务端路径创建仓库"""
+    try:
+        repository = await RepoMgmtService.create_repository_from_path(db, user_id, name, description, folder_path)
+        return RepositoryInfo.model_validate(repository)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+
+@router.get("/list", response_model=List[RepositoryInfo])
+async def get_repository_list(
+    user_id: str = Query(..., description="用户ID"),
+    page: int = Query(1, ge=1, description="页码"),
+    page_size: int = Query(10, ge=1, le=100, description="每页数量"),
+    keyword: str = Query(None, description="搜索关键词"),
+    db: AsyncSession = Depends(get_db),
+):
+    """获取仓库列表"""
+    try:
+        repositories, _ = await RepoMgmtService.get_repository_list(db, user_id, page, page_size, keyword)
+        return [RepositoryInfo.model_validate(r) for r in repositories]
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"获取仓库列表失败: {str(e)}",
+        )
+
+
+@router.get("/{repository_id}", response_model=RepositoryInfo)
+async def get_repository(
+    repository_id: str,
+    user_id: str = Query(..., description="用户ID"),
+    db: AsyncSession = Depends(get_db),
+):
+    """获取仓库详情"""
+    try:
+        repository = await RepoMgmtService.get_repository_by_id(db, repository_id)
+        if not repository:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="仓库不存在")
+        if repository.create_user_id != user_id:
+            raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="无权限获取仓库")
+        return RepositoryInfo.model_validate(repository)
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"获取仓库失败: {str(e)}",
+        )
+
+
+@router.put("/{repository_id}", response_model=RepositoryInfo)
+async def update_repository(
+    repository_id: str,
+    update_data: UpdateRepository,
+    user_id: str = Query(..., description="用户ID"),
+    db: AsyncSession = Depends(get_db),
+):
+    """更新仓库"""
+    try:
+        repository = await RepoMgmtService.update_repository(db, repository_id, user_id, update_data)
+        if not repository:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="仓库不存在")
+        return RepositoryInfo.model_validate(repository)
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e))
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"更新仓库失败: {str(e)}",
+        )
+
+
+@router.delete("/{repository_id}")
+async def delete_repository(
+    repository_id: str,
+    user_id: str = Query(..., description="用户ID"),
+    db: AsyncSession = Depends(get_db),
+):
+    """删除仓库"""
+    try:
+        success = await RepoMgmtService.delete_repository(db, repository_id, user_id)
+        if not success:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="仓库不存在")
+        return {"message": "仓库删除成功"}
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail=str(e))
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"删除仓库失败: {str(e)}",
+        )

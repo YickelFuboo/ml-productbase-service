@@ -4,8 +4,8 @@ from datetime import datetime
 from typing import List, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, delete, func
-from app.models.product_record import ProductRecord
-from app.schemes.product_mgmt import CreateProduct, UpdateProduct
+from app.product_mgmt.models.product_record import ProductRecord
+from app.product_mgmt.schemes.product_mgmt import CreateProduct, UpdateProduct
 
 
 class ProductMgmtService:
@@ -76,16 +76,12 @@ class ProductMgmtService:
             record = await ProductMgmtService.get_product_by_id(db, product_id)
             if not record:
                 return None
-            
             if record.create_user_id != user_id:
                 raise ValueError("无权限修改该产品")
-            
             if data.name is not None:
                 record.name = data.name
-            
             if data.description is not None:
                 record.description = data.description
-            
             record.updated_at = datetime.utcnow()
             await db.commit()
             await db.refresh(record)
@@ -105,10 +101,8 @@ class ProductMgmtService:
             record = await ProductMgmtService.get_product_by_id(db, product_id)
             if not record:
                 return False
-
             if record.create_user_id != user_id:
                 raise ValueError("无权限删除该产品")
-            
             await db.execute(delete(ProductRecord).where(ProductRecord.id == product_id))
             await db.commit()
             logging.info(f"删除产品: {record.name}")

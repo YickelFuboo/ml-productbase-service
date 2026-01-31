@@ -2,8 +2,8 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.infrastructure.database import get_db
-from app.schemes.product_mgmt import CreateProduct, UpdateProduct, ProductInfo
-from app.services.product_mgmt_service import ProductMgmtService
+from app.product_mgmt.schemes.product_mgmt import CreateProduct, UpdateProduct, ProductInfo
+from app.product_mgmt.services.product_mgmt_service import ProductMgmtService
 
 router = APIRouter(prefix="/api/v1/products", tags=["产品配置管理"])
 

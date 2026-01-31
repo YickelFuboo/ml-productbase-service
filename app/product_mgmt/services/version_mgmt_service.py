@@ -4,9 +4,9 @@ from datetime import datetime
 from typing import List, Optional
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, delete, func
-from app.models.version_record import VersionRecord
-from app.models.product_record import ProductRecord
-from app.schemes.version_mgmt import CreateVersion, UpdateVersion
+from app.product_mgmt.models.version_record import VersionRecord
+from app.product_mgmt.models.product_record import ProductRecord
+from app.product_mgmt.schemes.version_mgmt import CreateVersion, UpdateVersion
 
 
 class VersionMgmtService:
@@ -18,13 +18,10 @@ class VersionMgmtService:
         try:
             result = await db.execute(select(ProductRecord).where(ProductRecord.id == data.product_id))
             product = result.scalar_one_or_none()
-
             if not product:
                 raise ValueError("所属产品不存在")
-
             if product.create_user_id != user_id:
                 raise ValueError("无权限在该产品下创建版本")
-            
             record = VersionRecord(
                 id=str(uuid.uuid4()),
                 name=data.name,
@@ -92,16 +89,12 @@ class VersionMgmtService:
             record = await VersionMgmtService.get_version_by_id(db, version_id)
             if not record:
                 return None
-
             if record.create_user_id != user_id:
                 raise ValueError("无权限修改该版本")
-
             if data.name is not None:
                 record.name = data.name
-
             if data.description is not None:
                 record.description = data.description
-
             record.updated_at = datetime.utcnow()
             await db.commit()
             await db.refresh(record)
@@ -121,10 +114,8 @@ class VersionMgmtService:
             record = await VersionMgmtService.get_version_by_id(db, version_id)
             if not record:
                 return False
-
             if record.create_user_id != user_id:
                 raise ValueError("无权限删除该版本")
-                
             await db.execute(delete(VersionRecord).where(VersionRecord.id == version_id))
             await db.commit()
             logging.info(f"删除版本: {record.name}")

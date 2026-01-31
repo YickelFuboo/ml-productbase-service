@@ -2,8 +2,8 @@ from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.infrastructure.database import get_db
-from app.schemes.version_mgmt import CreateVersion, UpdateVersion, VersionInfo
-from app.services.version_mgmt_service import VersionMgmtService
+from app.product_mgmt.schemes.version_mgmt import CreateVersion, UpdateVersion, VersionInfo
+from app.product_mgmt.services.version_mgmt_service import VersionMgmtService
 
 router = APIRouter(prefix="/api/v1/versions", tags=["版本配置管理"])
 

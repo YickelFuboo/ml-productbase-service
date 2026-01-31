@@ -2,7 +2,7 @@ import uuid
 from datetime import datetime
 from sqlalchemy import Column, String, DateTime, Text
 from sqlalchemy.orm import relationship
-from app.models.base import Base
+from app.product_mgmt.models.base import Base
 
 
 class ProductRecord(Base):
