@@ -28,6 +28,7 @@ class ProductMgmtService:
             await db.refresh(record)
             logging.info(f"创建产品: {record.name}, 创建人: {user_id}")
             return record
+            
         except Exception as e:
             logging.error(f"创建产品失败: {e}")
             await db.rollback()
