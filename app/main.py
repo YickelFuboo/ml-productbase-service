@@ -16,7 +16,7 @@ from app.infrastructure.storage import STORAGE_CONN
 from app.infrastructure.vector_store import VECTOR_STORE_CONN
 from app.infrastructure.redis import REDIS_CONN
 from app.infrastructure.auth.jwt_middleware import jwt_middleware
-
+from app.infrastructure.api.llms import router as llms_router
 
 # 创建FastAPI应用
 app = FastAPI(
@@ -29,8 +29,9 @@ app = FastAPI(
 setup_logging()
 
 # 注册所有路由器
-from app.product_mgmt import product_router, version_router
-from app.repo_mgmt import repo_router, git_auth_router
+app.include_router(llms_router, prefix="/api/v1", tags=["模型管理"])
+from app.domains.product_mgmt import product_router, version_router
+from app.domains.repo_mgmt import repo_router, git_auth_router
 app.include_router(product_router)
 app.include_router(version_router)
 app.include_router(repo_router)
