@@ -143,6 +143,6 @@ def set_log_level(level_str: str):
     for handler in root_logger.handlers:
         handler.setLevel(log_level)
     
-    print(f"✅ 日志级别已动态设置为: {level_str}")
+    logging.info(f"日志级别已动态设置为: {level_str}")
 
 

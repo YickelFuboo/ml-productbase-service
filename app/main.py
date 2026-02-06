@@ -17,26 +17,40 @@ from app.infrastructure.vector_store import VECTOR_STORE_CONN
 from app.infrastructure.redis import REDIS_CONN
 from app.infrastructure.auth.jwt_middleware import jwt_middleware
 from app.infrastructure.api.llms import router as llms_router
+from app.domains.product_mgmt import product_router
+from app.domains.git_auth_mgmt import git_auth_router
+
 
 # 创建FastAPI应用
 app = FastAPI(
     title=APP_NAME,
     version=APP_VERSION,
     description=APP_DESCRIPTION,
+    docs_url="/docs",
+    redoc_url="/redoc",
+    openapi_url="/openapi.json",
+    swagger_ui_parameters={
+        "deepLinking": True,
+        "displayRequestDuration": True,
+        "filter": True,
+        "showExtensions": True,
+        "showCommonExtensions": True,
+    }
 )
 
 # 确保日志配置在应用启动时被正确设置
 setup_logging()
 
+#==================================
 # 注册所有路由器
+#==================================
 app.include_router(llms_router, prefix="/api/v1", tags=["模型管理"])
-from app.domains.product_mgmt import product_router, version_router
-from app.domains.repo_mgmt import repo_router, git_auth_router
-app.include_router(product_router)
-app.include_router(version_router)
-app.include_router(repo_router)
-app.include_router(git_auth_router)
+app.include_router(product_router, prefix="/api/v1")
+app.include_router(git_auth_router, prefix="/api/v1")
 
+#==================================
+# 配置中间件
+#==================================
 # 配置CORS中间件 - 直接使用FastAPI内置的CORSMiddleware
 app.add_middleware(
     CORSMiddleware,
@@ -61,7 +75,9 @@ def run_celery_worker():
     except Exception as e:
         logging.error(f"Celery Worker 启动失败: {e}")
 
-# 初始化数据库
+#==================================
+# 初始化基础设施
+#==================================
 @app.on_event("startup")
 async def startup_event():
     """应用启动时初始化"""
@@ -136,7 +152,6 @@ async def root():
         "health": "/health",
         "api_base": "/api/v1"
     }
-
 
 # 健康检查
 @app.get("/health")

@@ -17,10 +17,10 @@ ENV/
 logs/
 *.log
 
-# Environment files
-.env
-.env.dev
-!.env.example
+# Environment files!
+env
+env.dev
+!env.example
 
 # Database
 *.db

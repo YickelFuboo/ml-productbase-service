@@ -22,6 +22,10 @@ class Settings(BaseSettings):
     debug: bool = Field(default=False, description="调试模式", env="DEBUG")
     app_log_level: str = Field(default="INFO", description="日志级别", env="APP_LOG_LEVEL")
 
+    # 项目本地临时存放目录结构（先对于项目根目录）      
+    tmp_dir: str = Field(default="tmp_dir", description="项目本地临时存放目录", env="TMP_DIR")
+    model_cache_dir: str = Field(default="cache/models", description="模型缓存目录", env="MODEL_CACHE_DIR")
+
     # 认证配置
     auth_user_service_url: str = Field(default="http://localhost:8000", description="User-Service地址", env="AUTH_USER_SERVICE_URL")
     auth_request_timeout: int = Field(default=5, description="请求超时时间(秒)", env="AUTH_REQUEST_TIMEOUT")
@@ -30,8 +34,8 @@ class Settings(BaseSettings):
     auth_blacklist_endpoint: str = Field(default="/blacklist", description="黑名单端点", env="AUTH_BLACKLIST_ENDPOINT")
     
     # 数据库配置
-    database_type: str = Field(default="postgresql", description="数据库类型: postgresql 或 mysql", env="DATABASE_TYPE")
     db_name: str = Field(default="knowledge_service", description="数据库名称", env="DB_NAME")
+    database_type: str = Field(default="postgresql", description="数据库类型: postgresql 或 mysql", env="DATABASE_TYPE")
     db_pool_size: int = Field(default=10, description="连接池大小", env="DB_POOL_SIZE")
     db_max_overflow: int = Field(default=20, description="最大溢出连接数", env="DB_MAX_OVERFLOW")
     
@@ -121,8 +125,9 @@ class Settings(BaseSettings):
     # =============================================================================
     
     class Config:
-        env_file = "env"
+        env_file = os.path.join(PROJECT_BASE_DIR, "env")
         env_file_encoding = "utf-8"
+        extra = "ignore"
     
     @property
     def database_url(self) -> str:

@@ -178,6 +178,15 @@ class RedisClient:
         except Exception as e:
             logging.warning(f"Redis GET操作失败 {k}: {e}")
             return None
+        
+    async def keys(self, pattern: str, space: RedisSpaceEnum = RedisSpaceEnum.DEFAULT) -> List[str]:
+        """获取匹配模式的键"""
+        try:
+            client = self._connet_pool.get_client(space)
+            return await client.keys(pattern)
+        except Exception as e:
+            logging.warning(f"Redis KEYS操作失败 {pattern}: {e}")
+            return []
     
     async def set(self, k: str, v: Any, exp: int = 3600, space: RedisSpaceEnum = RedisSpaceEnum.DEFAULT) -> bool:
         """设置键值对"""

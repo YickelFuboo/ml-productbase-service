@@ -1,9 +1,9 @@
 from app.infrastructure.database.factory import get_db, close_db, health_check_db
+from app.infrastructure.database.models_base import Base
 
 __all__ = [
-    # FastAPI依赖注入
+    "Base",
     "get_db",
-    # 数据库管理
     "close_db",
     "health_check_db",
 ]

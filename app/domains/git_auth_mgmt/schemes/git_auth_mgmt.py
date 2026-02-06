@@ -17,6 +17,7 @@ class GitAuthProvider(Enum):
 class GitAuthResponse(BaseModel):
     id: str
     user_id: str
+    version_id: Optional[str] = None
     provider: str
     is_active: bool
     created_at: datetime
