@@ -1,5 +1,5 @@
 """
-构建关系模型：ArchBuildArtifact、ArchCodeToArtifact、ArchArtifactToArtifact
+构建关系模型：ArchBuildArtifact、ArchElementToArtifact、ArchArtifactToArtifact
 """
 import uuid
 from datetime import datetime
@@ -44,7 +44,7 @@ class ArchBuildArtifact(Base):
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False, comment="创建时间")
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=True, comment="更新时间")
 
-    code_sources = relationship("ArchCodeToArtifact", back_populates="build_artifact", cascade="all, delete-orphan")
+    element_sources = relationship("ArchElementToArtifact", back_populates="build_artifact", cascade="all, delete-orphan")
     input_artifact_relations = relationship("ArchArtifactToArtifact", foreign_keys="ArchArtifactToArtifact.target_artifact_id", back_populates="target_artifact", cascade="all, delete-orphan")
     output_artifact_relations = relationship("ArchArtifactToArtifact", foreign_keys="ArchArtifactToArtifact.input_artifact_id", back_populates="input_artifact", cascade="all, delete-orphan")
     deployment_relations = relationship("ArchArtifactToDeployment", foreign_keys="ArchArtifactToDeployment.build_artifact_id", back_populates="build_artifact", cascade="all, delete-orphan")
@@ -103,37 +103,37 @@ class ArchArtifactToArtifact(Base):
         }
 
 
-class ArchCodeToArtifact(Base):
-    """代码仓到构建产物的映射（多对多）"""
-    __tablename__ = "arch_code_to_artifact"
+class ArchElementToArtifact(Base):
+    """架构元素到构建产物的映射（多对多）"""
+    __tablename__ = "arch_element_to_artifact"
 
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()), comment="ID")
     version_id = Column(String(36), ForeignKey("version_record.id", ondelete="CASCADE"), nullable=False, index=True, comment="版本ID")
     
+    element_id = Column(String(36), ForeignKey("arch_element.id", ondelete="CASCADE"), nullable=False, index=True, comment="架构元素ID")
     build_artifact_id = Column(String(36), ForeignKey("arch_build_artifact.id", ondelete="CASCADE"), nullable=False, index=True, comment="构建产物ID")
-    code_repo_url = Column(String(500), nullable=False, comment="代码仓地址")
-    code_repo_path = Column(String(500), nullable=True, comment="代码仓内路径（共享仓时表示该产物对应目录）")
-    build_order = Column(Integer, default=0, nullable=False, comment="构建顺序（同一产物的多个代码仓）")
+    build_order = Column(Integer, default=0, nullable=False, comment="构建顺序（同一产物的多个元素）")
     description = Column(Text, nullable=True, comment="说明")
     
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False, comment="创建时间")
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=True, comment="更新时间")
 
-    build_artifact = relationship("ArchBuildArtifact", foreign_keys=[build_artifact_id], back_populates="code_sources")
+    element = relationship("ArchElement", foreign_keys=[element_id])
+    build_artifact = relationship("ArchBuildArtifact", foreign_keys=[build_artifact_id], back_populates="element_sources")
 
     __table_args__ = (
-        Index("idx_arch_code_artifact_version", "version_id"),
-        Index("idx_arch_code_artifact_build", "build_artifact_id"),
-        Index("uq_arch_code_artifact_version_build_repo", "version_id", "build_artifact_id", "code_repo_url", "code_repo_path", unique=True),
+        Index("idx_arch_element_artifact_version", "version_id"),
+        Index("idx_arch_element_artifact_element", "element_id"),
+        Index("idx_arch_element_artifact_build", "build_artifact_id"),
+        Index("uq_arch_element_artifact_version_element_build", "version_id", "element_id", "build_artifact_id", unique=True),
     )
 
     def to_dict(self):
         return {
             "id": self.id,
             "version_id": self.version_id,
+            "element_id": self.element_id,
             "build_artifact_id": self.build_artifact_id,
-            "code_repo_url": self.code_repo_url,
-            "code_repo_path": self.code_repo_path,
             "build_order": self.build_order,
             "description": self.description,
             "created_at": self.created_at.isoformat() if self.created_at else None,

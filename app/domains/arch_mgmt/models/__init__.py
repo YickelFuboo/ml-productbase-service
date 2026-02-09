@@ -18,7 +18,7 @@ from app.domains.arch_mgmt.models.interfaces import (
 from app.domains.arch_mgmt.models.build import (
     ArchBuildArtifactType,
     ArchBuildArtifact,
-    ArchCodeToArtifact,
+    ArchElementToArtifact,
     ArchArtifactToArtifact,
 )
 from app.domains.arch_mgmt.models.deployment import (
@@ -43,7 +43,7 @@ __all__ = [
     "ArchElementInterface",
     "ArchBuildArtifactType",
     "ArchBuildArtifact",
-    "ArchCodeToArtifact",
+    "ArchElementToArtifact",
     "ArchArtifactToArtifact",
     "ArchDeploymentUnitType",
     "ArchDeploymentUnit",
