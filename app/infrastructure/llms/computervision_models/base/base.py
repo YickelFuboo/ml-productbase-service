@@ -10,7 +10,7 @@ from PIL import Image
 import logging
 from app.config.settings import Settings
 from app.utils.common import is_english
-from app.aiframework.prompts import get_prompt_template_with_params
+from app.aiframework.prompts import get_prompt_template
 
 # 重试配置常量
 MAX_RETRY_ATTEMPTS = 3  # 最大尝试次数
@@ -166,7 +166,7 @@ class BaseComputerVision(ABC):
                     },
                     {
                         "type": "text",
-                        "text": prompt if prompt else get_prompt_template_with_params("cv/computer_vision_describe_prompt.md", {"page": None}),
+                        "text": prompt if prompt else get_prompt_template("cv/computer_vision_describe_prompt.md", {"page": None}),
                     },
                 ],
             }

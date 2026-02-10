@@ -7,7 +7,7 @@ from transformers import GenerationConfig
 import asyncio
 from google.generativeai import GenerativeModel, client
 from app.infrastructure.llms.computervision_models.base.base import BaseComputerVision, MAX_RETRY_ATTEMPTS
-from app.aiframework.prompts import get_prompt_template_with_params
+from app.aiframework.prompts import get_prompt_template
 
 
 class GeminiCV(BaseComputerVision):
@@ -77,7 +77,7 @@ class GeminiCV(BaseComputerVision):
             Tuple[str, int]: (图像描述文本, token数量)
         """
         b64 = self._image2base64(image)
-        vision_prompt = prompt if prompt else get_prompt_template_with_params("cv/computer_vision_describe_prompt.md", {"page": None})
+        vision_prompt = prompt if prompt else get_prompt_template("cv/computer_vision_describe_prompt.md", {"page": None})
         
         img = open(BytesIO(base64.b64decode(b64)))
         input_content = [vision_prompt, img]

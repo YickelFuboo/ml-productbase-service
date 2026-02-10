@@ -5,7 +5,11 @@ from sqlalchemy import create_engine, pool
 
 from app.config.settings import settings
 from app.domains.product_mgmt.models.products import ProductRecord, VersionRecord
-from app.domains.git_auth_mgmt.models.git_authority import GitAuthority
+from app.domains.arch_mgmt.models import architecture
+from app.domains.arch_mgmt.models import decision
+from app.domains.arch_mgmt.models import interfaces
+from app.domains.arch_mgmt.models import build
+from app.domains.arch_mgmt.models import deployment
 from app.infrastructure.database.models_base import Base
 
 config = context.config

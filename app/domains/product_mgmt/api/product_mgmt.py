@@ -33,6 +33,34 @@ async def create_product(
         )
 
 
+@product_router.get("/list")
+async def get_product_list(
+    user_id: str = Query(..., description="用户ID"),
+    page: int = Query(1, ge=1, description="页码"),
+    page_size: int = Query(10, ge=1, le=100, description="每页数量"),
+    keyword: str = Query(None, description="搜索关键词"),
+    db: AsyncSession = Depends(get_db),
+):
+    """查询产品列表（含每个产品下的版本子列表）"""
+    try:
+        products, versions_by_product, total = await ProductMgmtService.get_product_and_version_list(
+            db, user_id, page, page_size, keyword
+        )
+        items = [
+            ProductWithVersionsInfo(
+                **ProductInfo.model_validate(p).model_dump(),
+                versions=[VersionInfo.model_validate(v) for v in versions_by_product.get(p.id, [])],
+            )
+            for p in products
+        ]
+        return {"items": items, "total": total}
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"查询产品列表失败: {str(e)}",
+        )
+
+
 @product_router.get("/{product_id}", response_model=ProductInfo)
 async def get_product(
     product_id: str,
@@ -189,31 +217,4 @@ async def delete_version(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"删除版本失败: {str(e)}",
-        )
-
-@product_router.get("/list")
-async def get_product_list(
-    user_id: str = Query(..., description="用户ID"),
-    page: int = Query(1, ge=1, description="页码"),
-    page_size: int = Query(10, ge=1, le=100, description="每页数量"),
-    keyword: str = Query(None, description="搜索关键词"),
-    db: AsyncSession = Depends(get_db),
-):
-    """查询产品列表（含每个产品下的版本子列表）"""
-    try:
-        products, versions_by_product, total = await ProductMgmtService.get_product_and_version_list(
-            db, user_id, page, page_size, keyword
-        )
-        items = [
-            ProductWithVersionsInfo(
-                **ProductInfo.model_validate(p).model_dump(),
-                versions=[VersionInfo.model_validate(v) for v in versions_by_product.get(p.id, [])],
-            )
-            for p in products
-        ]
-        return {"items": items, "total": total}
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"查询产品列表失败: {str(e)}",
         )

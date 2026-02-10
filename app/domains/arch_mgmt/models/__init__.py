@@ -2,10 +2,12 @@ from app.domains.arch_mgmt.models.architecture import (
     ArchOverviewSectionKey,
     ArchElementType,
     ArchDependencyType,
-    ArchDecisionStatus,
     ArchOverview,
     ArchElement,
     ArchDependency,
+)
+from app.domains.arch_mgmt.models.decision import (
+    ArchDecisionStatus,
     ArchDecision,
 )
 from app.domains.arch_mgmt.models.interfaces import (

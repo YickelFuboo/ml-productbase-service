@@ -12,7 +12,7 @@ from dashscope import MultiModalConversation
 from app.config.settings import settings
 from app.utils.common import get_project_base_directory, is_english
 from app.infrastructure.llms.computervision_models.base.base import BaseComputerVision, MAX_RETRY_ATTEMPTS
-from app.aiframework.prompts import get_prompt_template_with_params
+from app.aiframework.prompts import get_prompt_template
 
 
 class QWenCV(BaseComputerVision):
@@ -277,7 +277,7 @@ class QWenCV(BaseComputerVision):
                 "content": [
                     {"image": f"file://{path}"},
                     {
-                        "text": prompt if prompt else get_prompt_template_with_params("cv/computer_vision_describe_prompt.md", {"page": None}),
+                        "text": prompt if prompt else get_prompt_template("cv/computer_vision_describe_prompt.md", {"page": None}),
                     },
                 ],
             }

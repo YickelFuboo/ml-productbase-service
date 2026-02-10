@@ -16,9 +16,9 @@ from app.infrastructure.storage import STORAGE_CONN
 from app.infrastructure.vector_store import VECTOR_STORE_CONN
 from app.infrastructure.redis import REDIS_CONN
 from app.infrastructure.auth.jwt_middleware import jwt_middleware
-from app.infrastructure.api.llms import router as llms_router
 from app.domains.product_mgmt import product_router
 from app.domains.git_auth_mgmt import git_auth_router
+from app.domains.arch_mgmt import arch_mgmt_router
 
 
 # 创建FastAPI应用
@@ -44,9 +44,9 @@ setup_logging()
 #==================================
 # 注册所有路由器
 #==================================
-app.include_router(llms_router, prefix="/api/v1", tags=["模型管理"])
-app.include_router(product_router, prefix="/api/v1")
-app.include_router(git_auth_router, prefix="/api/v1")
+app.include_router(product_router, prefix="/api/v1", tags=["产品管理"])
+app.include_router(git_auth_router, prefix="/api/v1", tags=["Git认证管理"])
+app.include_router(arch_mgmt_router, prefix="/api/v1", tags=["架构管理"])
 
 #==================================
 # 配置中间件
