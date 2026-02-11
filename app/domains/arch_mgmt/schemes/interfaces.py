@@ -35,6 +35,7 @@ class ArchInterfaceUpdate(BaseModel):
     parent_id: Optional[str] = None
     interface_type: Optional[str] = None
     tech_stack: Optional[str] = None
+    owner_id: Optional[str] = None
 
 
 class ArchInterfaceInfo(BaseModel):
@@ -50,6 +51,8 @@ class ArchInterfaceInfo(BaseModel):
     constraints: Optional[str] = None
     interface_type: Optional[str] = None
     tech_stack: Optional[str] = None
+    create_user_id: Optional[str] = None
+    owner_id: Optional[str] = None
     created_at: datetime
     updated_at: Optional[datetime] = None
 

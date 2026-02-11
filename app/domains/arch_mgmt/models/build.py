@@ -41,6 +41,9 @@ class ArchBuildArtifact(Base):
     build_command = Column(Text, nullable=True, comment="构建命令")
     build_environment = Column(Text, nullable=True, comment="构建环境信息（OS、编译器版本、运行时版本等）")
 
+    create_user_id = Column(String(36), nullable=True, index=True, comment="创建人ID")
+    owner_id = Column(String(36), nullable=True, index=True, comment="数据Owner ID，默认创建人")
+
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False, comment="创建时间")
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=True, comment="更新时间")
 
@@ -60,6 +63,8 @@ class ArchBuildArtifact(Base):
             "description": self.description,
             "build_command": self.build_command,
             "build_environment": self.build_environment,
+            "create_user_id": self.create_user_id,
+            "owner_id": self.owner_id,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }

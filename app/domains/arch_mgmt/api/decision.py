@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.infrastructure.database import get_db
 from app.domains.arch_mgmt.models.decision import ArchDecisionStatus
@@ -13,7 +13,7 @@ router = APIRouter(prefix="/api/arch", tags=["架构决策"])
 
 
 @router.get("/decision-statuses")
-async def get_decision_statuses():
+async def get_decision_statuses(user_id: str = Query(..., description="用户ID")):
     """获取 ADR 状态枚举"""
     return {"statuses": ArchDecisionStatus.values()}
 
@@ -21,6 +21,7 @@ async def get_decision_statuses():
 @router.post("/decisions", response_model=ArchDecisionInfo)
 async def create_decision(
     data: ArchDecisionCreate,
+    user_id: str = Query(..., description="用户ID"),
     db: AsyncSession = Depends(get_db),
 ):
     """新增架构决策记录（ADR）"""
@@ -30,7 +31,7 @@ async def create_decision(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"status 不合法，合法值: {ArchDecisionStatus.values()}",
             )
-        rec = await DecisionService.create_decision(db, data)
+        rec = await DecisionService.create_decision(db, data, user_id)
         return ArchDecisionInfo.model_validate(rec)
     except HTTPException:
         raise
@@ -45,6 +46,7 @@ async def create_decision(
 async def update_decision(
     decision_id: str,
     data: ArchDecisionUpdate,
+    user_id: str = Query(..., description="用户ID"),
     db: AsyncSession = Depends(get_db),
 ):
     """更新架构决策"""
@@ -65,6 +67,7 @@ async def update_decision(
 @router.delete("/decisions/{decision_id}")
 async def delete_decision(
     decision_id: str,
+    user_id: str = Query(..., description="用户ID"),
     db: AsyncSession = Depends(get_db),
 ):
     """删除架构决策"""
@@ -85,6 +88,7 @@ async def delete_decision(
 @router.get("/versions/{version_id}/decisions", response_model=list[ArchDecisionInfo])
 async def list_decisions(
     version_id: str,
+    user_id: str = Query(..., description="用户ID"),
     db: AsyncSession = Depends(get_db),
 ):
     """获取版本的架构决策列表（ADR）"""
@@ -101,6 +105,7 @@ async def list_decisions(
 @router.get("/decisions/{decision_id}", response_model=ArchDecisionInfo)
 async def get_decision(
     decision_id: str,
+    user_id: str = Query(..., description="用户ID"),
     db: AsyncSession = Depends(get_db),
 ):
     """获取单条架构决策详情"""

@@ -12,6 +12,8 @@ from app.domains.arch_mgmt.models.build import (
 from app.domains.arch_mgmt.schemes.build import (
     ArchBuildArtifactCreate,
     ArchBuildArtifactUpdate,
+    ArchBuildArtifactInfo,
+    ArchBuildArtifactTree,
     ArchElementToArtifactCreate,
     ArchElementToArtifactUpdate,
     ArchArtifactToArtifactCreate,
@@ -26,7 +28,7 @@ class BuildService:
     # ==================== BuildArtifact ====================
 
     @staticmethod
-    async def create_build_artifact(session: AsyncSession, data: ArchBuildArtifactCreate) -> ArchBuildArtifact:
+    async def create_build_artifact(session: AsyncSession, data: ArchBuildArtifactCreate, user_id: str) -> ArchBuildArtifact:
         artifact = ArchBuildArtifact(
             id=str(uuid.uuid4()),
             version_id=data.version_id,
@@ -35,6 +37,8 @@ class BuildService:
             build_command=data.build_command,
             build_environment=data.build_environment,
             description=data.description,
+            create_user_id=user_id,
+            owner_id=user_id,
             created_at=datetime.utcnow(),
             updated_at=datetime.utcnow(),
         )
@@ -227,3 +231,66 @@ class BuildService:
     async def get_artifact_to_artifact_by_id(session: AsyncSession, artifact_to_artifact_id: str) -> Optional[ArchArtifactToArtifact]:
         result = await session.execute(select(ArchArtifactToArtifact).where(ArchArtifactToArtifact.id == artifact_to_artifact_id))
         return result.scalar_one_or_none()
+
+    # ==================== BuildArtifact Tree ====================
+
+    @staticmethod
+    def _artifact_to_tree(
+        artifact: ArchBuildArtifact,
+        all_artifacts: List[ArchBuildArtifact],
+        artifact_relations: List[ArchArtifactToArtifact],
+    ):
+        """将构建产物转换为树节点，子节点是输入产物"""
+        # 找到所有以当前产物为目标产物的关系（即当前产物作为父节点）
+        # target_artifact_id 是父节点（产物），input_artifact_id 是子节点（输入）
+        child_relations = [r for r in artifact_relations if r.target_artifact_id == artifact.id]
+        # 获取所有子输入产物
+        child_artifact_ids = [r.input_artifact_id for r in child_relations]
+        children = [a for a in all_artifacts if a.id in child_artifact_ids]
+        # 按 build_order 和 created_at 排序
+        sorted_children = sorted(
+            children,
+            key=lambda x: (
+                next((r.build_order for r in child_relations if r.input_artifact_id == x.id), 0),
+                x.created_at or datetime.min,
+            ),
+        )
+
+        # 构建树节点
+        data = ArchBuildArtifactInfo.model_validate(artifact).model_dump()
+        data["children"] = [
+            BuildService._artifact_to_tree(c, all_artifacts, artifact_relations) for c in sorted_children
+        ]
+        return ArchBuildArtifactTree(**data)
+
+    @staticmethod
+    async def get_build_artifacts_tree(session: AsyncSession, version_id: str):
+        """获取构建产物树结构（父节点是产物，子节点是输入）"""
+        # 获取所有构建产物
+        result = await session.execute(
+            select(ArchBuildArtifact).where(ArchBuildArtifact.version_id == version_id).order_by(ArchBuildArtifact.created_at)
+        )
+        all_artifacts = list(result.scalars().all())
+
+        # 获取所有构建产物关系
+        relations_result = await session.execute(
+            select(ArchArtifactToArtifact).where(ArchArtifactToArtifact.version_id == version_id)
+        )
+        artifact_relations = list(relations_result.scalars().all())
+
+        # 找到所有根节点：没有作为 input_artifact_id 的构建产物（即最终的产物，不是其他产物的输入）
+        input_artifact_ids = {r.input_artifact_id for r in artifact_relations}
+        roots = [a for a in all_artifacts if a.id not in input_artifact_ids]
+
+        # 如果没有关系，返回所有产物作为根节点
+        if not artifact_relations:
+            return [
+                ArchBuildArtifactTree(**ArchBuildArtifactInfo.model_validate(a).model_dump(), children=[])
+                for a in sorted(roots, key=lambda x: x.created_at or datetime.min)
+            ]
+
+        # 构建树结构
+        return [
+            BuildService._artifact_to_tree(r, all_artifacts, artifact_relations)
+            for r in sorted(roots, key=lambda x: x.created_at or datetime.min)
+        ]

@@ -21,19 +21,19 @@ router = APIRouter(prefix="/api/arch", tags=["接口视图"])
 
 
 @router.get("/interface-categories")
-async def get_interface_categories():
+async def get_interface_categories(user_id: str = Query(..., description="用户ID")):
     """获取接口类别（logical/physical）"""
     return {"categories": ArchInterfaceCategory.values()}
 
 
 @router.get("/physical-interface-types")
-async def get_physical_interface_types():
+async def get_physical_interface_types(user_id: str = Query(..., description="用户ID")):
     """获取物理接口类型（rest_api/grpc/message_queue 等）"""
     return {"types": ArchPhysicalInterfaceType.values()}
 
 
 @router.get("/element-interface-relation-types")
-async def get_element_interface_relation_types():
+async def get_element_interface_relation_types(user_id: str = Query(..., description="用户ID")):
     """获取元素-接口关系类型（provides/uses）"""
     return {"types": ArchElementInterfaceRelationType.values()}
 
@@ -43,11 +43,12 @@ async def get_element_interface_relation_types():
 @router.post("/interfaces", response_model=ArchInterfaceInfo)
 async def create_interface(
     data: ArchInterfaceCreate,
+    user_id: str = Query(..., description="用户ID"),
     db: AsyncSession = Depends(get_db),
 ):
     """新增接口（逻辑接口或物理接口）"""
     try:
-        interface = await InterfacesService.create_interface(db, data)
+        interface = await InterfacesService.create_interface(db, data, user_id)
         if not interface:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -67,6 +68,7 @@ async def create_interface(
 async def update_interface(
     interface_id: str,
     data: ArchInterfaceUpdate,
+    user_id: str = Query(..., description="用户ID"),
     db: AsyncSession = Depends(get_db),
 ):
     """更新接口"""
@@ -87,6 +89,7 @@ async def update_interface(
 @router.delete("/interfaces/{interface_id}")
 async def delete_interface(
     interface_id: str,
+    user_id: str = Query(..., description="用户ID"),
     db: AsyncSession = Depends(get_db),
 ):
     """删除接口"""
@@ -107,6 +110,7 @@ async def delete_interface(
 @router.get("/versions/{version_id}/interfaces", response_model=list[ArchInterfaceInfo])
 async def list_interfaces(
     version_id: str,
+    user_id: str = Query(..., description="用户ID"),
     interface_category: Optional[str] = Query(None, description="按接口类别过滤（logical/physical）"),
     interface_type: Optional[str] = Query(None, description="按物理接口类型过滤"),
     parent_id: Optional[str] = Query(None, description="按父接口ID过滤"),
@@ -126,6 +130,7 @@ async def list_interfaces(
 @router.get("/interfaces/{interface_id}", response_model=ArchInterfaceInfo)
 async def get_interface(
     interface_id: str,
+    user_id: str = Query(..., description="用户ID"),
     db: AsyncSession = Depends(get_db),
 ):
     """获取接口详情"""
@@ -148,6 +153,7 @@ async def get_interface(
 @router.post("/element-interfaces", response_model=ArchElementInterfaceInfo)
 async def create_element_interface(
     data: ArchElementInterfaceCreate,
+    user_id: str = Query(..., description="用户ID"),
     db: AsyncSession = Depends(get_db),
 ):
     """新增元素-接口关系（提供/使用）"""
@@ -172,6 +178,7 @@ async def create_element_interface(
 async def update_element_interface(
     elem_iface_id: str,
     data: ArchElementInterfaceUpdate,
+    user_id: str = Query(..., description="用户ID"),
     db: AsyncSession = Depends(get_db),
 ):
     """更新元素-接口关系"""
@@ -192,6 +199,7 @@ async def update_element_interface(
 @router.delete("/element-interfaces/{elem_iface_id}")
 async def delete_element_interface(
     elem_iface_id: str,
+    user_id: str = Query(..., description="用户ID"),
     db: AsyncSession = Depends(get_db),
 ):
     """删除元素-接口关系"""
@@ -212,6 +220,7 @@ async def delete_element_interface(
 @router.get("/versions/{version_id}/element-interfaces", response_model=list[ArchElementInterfaceInfo])
 async def list_element_interfaces(
     version_id: str,
+    user_id: str = Query(..., description="用户ID"),
     element_id: Optional[str] = Query(None, description="按元素ID过滤"),
     interface_id: Optional[str] = Query(None, description="按接口ID过滤"),
     relation_type: Optional[str] = Query(None, description="按关系类型过滤"),

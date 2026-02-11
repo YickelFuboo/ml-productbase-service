@@ -38,7 +38,9 @@ class ArchDecision(Base):
     consequences = Column(Text, nullable=True, comment="后果")
     alternatives_considered = Column(Text, nullable=True, comment="已考虑的备选方案")
     supersedes_id = Column(String(36), ForeignKey("arch_decision.id", ondelete="SET NULL"), nullable=True, index=True, comment="取代的 ADR ID")
-    
+
+    create_user_id = Column(String(36), nullable=True, index=True, comment="创建人ID")
+
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False, comment="创建时间")
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=True, comment="更新时间")
 
@@ -60,6 +62,7 @@ class ArchDecision(Base):
             "consequences": self.consequences,
             "alternatives_considered": self.alternatives_considered,
             "supersedes_id": self.supersedes_id,
+            "create_user_id": self.create_user_id,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }

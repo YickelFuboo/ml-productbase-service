@@ -22,6 +22,7 @@ class ArchDeploymentUnitUpdate(BaseModel):
     unit_type: Optional[str] = None
     description: Optional[str] = None
     deployment_config: Optional[str] = None
+    owner_id: Optional[str] = None
 
 
 class ArchDeploymentUnitInfo(BaseModel):
@@ -32,6 +33,8 @@ class ArchDeploymentUnitInfo(BaseModel):
     unit_type: str
     description: Optional[str] = None
     deployment_config: Optional[str] = None
+    create_user_id: Optional[str] = None
+    owner_id: Optional[str] = None
     created_at: datetime
     updated_at: Optional[datetime] = None
 

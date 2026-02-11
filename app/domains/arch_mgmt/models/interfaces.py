@@ -5,7 +5,7 @@ import uuid
 from datetime import datetime
 from enum import Enum
 from sqlalchemy import Column, String, DateTime, Text, ForeignKey, Index, CheckConstraint
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, backref
 from app.infrastructure.database.models_base import Base
 
 
@@ -65,10 +65,13 @@ class ArchInterface(Base):
     interface_type = Column(String(32), nullable=True, index=True, comment=f"物理接口类型（仅物理接口使用）：{'|'.join(ArchPhysicalInterfaceType.values())}")
     tech_stack = Column(String(500), nullable=True, comment="技术栈（仅物理接口使用）")
 
+    create_user_id = Column(String(36), nullable=True, index=True, comment="创建人ID")
+    owner_id = Column(String(36), nullable=True, index=True, comment="数据Owner ID，默认创建人")
+
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False, comment="创建时间")
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=True, comment="更新时间")
 
-    parent = relationship("ArchInterface", foreign_keys=[parent_id], remote_side="ArchInterface.id", backref="children")
+    parent = relationship("ArchInterface", foreign_keys=[parent_id], remote_side="ArchInterface.id", backref=backref("children", passive_deletes=True))
     element_relations = relationship("ArchElementInterface", back_populates="interface", cascade="all, delete-orphan")
 
     __table_args__ = (
@@ -91,6 +94,8 @@ class ArchInterface(Base):
             "constraints": self.constraints,
             "interface_type": self.interface_type,
             "tech_stack": self.tech_stack,
+            "create_user_id": self.create_user_id,
+            "owner_id": self.owner_id,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }

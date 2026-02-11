@@ -25,19 +25,19 @@ router = APIRouter(prefix="/api/arch", tags=["逻辑架构视图"])
 
 
 @router.get("/overview-section-keys")
-async def get_overview_section_keys():
+async def get_overview_section_keys(user_id: str = Query(..., description="用户ID")):
     """获取标准架构说明节键（Arc42 风格）；也支持自定义 key"""
     return {"section_keys": ArchOverviewSectionKey.ordered_values()}
 
 
 @router.get("/element-types")
-async def get_element_types():
+async def get_element_types(user_id: str = Query(..., description="用户ID")):
     """获取支持的架构元素类型（C4/Arc42）"""
     return {"types": ArchElementType.values()}
 
 
 @router.get("/dependency-types")
-async def get_dependency_types():
+async def get_dependency_types(user_id: str = Query(..., description="用户ID")):
     """获取建议的依赖关系类型"""
     return {"types": ArchDependencyType.values()}
 
@@ -47,11 +47,12 @@ async def get_dependency_types():
 @router.post("/overview", response_model=ArchOverviewInfo)
 async def create_overview(
     data: ArchOverviewCreate,
+    user_id: str = Query(..., description="用户ID"),
     db: AsyncSession = Depends(get_db),
 ):
     """新增某版本的指定节架构说明（section_key 默认 main，可传 Arc42 节键）"""
     try:
-        overview = await ArchitectureService.create_overview(db, data)
+        overview = await ArchitectureService.create_overview(db, data, user_id)
         return ArchOverviewInfo.model_validate(overview)
     except ValueError as e:
         raise HTTPException(
@@ -69,6 +70,7 @@ async def create_overview(
 async def update_overview(
     version_id: str,
     data: ArchOverviewUpdate,
+    user_id: str = Query(..., description="用户ID"),
     section_key: str = Query("main", description="节键"),
     db: AsyncSession = Depends(get_db),
 ):
@@ -90,6 +92,7 @@ async def update_overview(
 @router.get("/versions/{version_id}/overviews", response_model=list[ArchOverviewInfo])
 async def list_overviews(
     version_id: str,
+    user_id: str = Query(..., description="用户ID"),
     db: AsyncSession = Depends(get_db),
 ):
     """获取某版本下所有架构说明节"""
@@ -106,6 +109,7 @@ async def list_overviews(
 @router.get("/versions/{version_id}/overview", response_model=Optional[ArchOverviewInfo])
 async def get_overview(
     version_id: str,
+    user_id: str = Query(..., description="用户ID"),
     section_key: str = Query("main", description="节键，如 main 或 context_and_scope"),
     db: AsyncSession = Depends(get_db),
 ):
@@ -125,6 +129,7 @@ async def get_overview(
 @router.post("/elements", response_model=ArchElementInfo)
 async def create_element(
     data: ArchElementCreate,
+    user_id: str = Query(..., description="用户ID"),
     db: AsyncSession = Depends(get_db),
 ):
     """新增架构元素（C4/Arc42 构建块）"""
@@ -134,7 +139,7 @@ async def create_element(
                 status_code=status.HTTP_400_BAD_REQUEST,
                 detail=f"element_type 不合法，合法值: {ArchElementType.values()}",
             )
-        elem = await ArchitectureService.create_element(db, data)
+        elem = await ArchitectureService.create_element(db, data, user_id)
         return ArchElementInfo.model_validate(elem)
     except HTTPException:
         raise
@@ -149,6 +154,7 @@ async def create_element(
 async def update_element(
     element_id: str,
     data: ArchElementUpdate,
+    user_id: str = Query(..., description="用户ID"),
     db: AsyncSession = Depends(get_db),
 ):
     """更新架构元素"""
@@ -169,6 +175,7 @@ async def update_element(
 @router.delete("/elements/{element_id}")
 async def delete_element(
     element_id: str,
+    user_id: str = Query(..., description="用户ID"),
     db: AsyncSession = Depends(get_db),
 ):
     """删除架构元素"""
@@ -189,6 +196,7 @@ async def delete_element(
 @router.get("/versions/{version_id}/elements", response_model=list[ArchElementInfo])
 async def list_elements(
     version_id: str,
+    user_id: str = Query(..., description="用户ID"),
     parent_id: Optional[str] = Query(None, description="父元素ID，不传则返回全部"),
     element_type: Optional[str] = Query(None, description="按类型过滤"),
     db: AsyncSession = Depends(get_db),
@@ -207,6 +215,7 @@ async def list_elements(
 @router.get("/versions/{version_id}/elements/tree", response_model=list[ArchElementTree])
 async def list_elements_tree(
     version_id: str,
+    user_id: str = Query(..., description="用户ID"),
     db: AsyncSession = Depends(get_db),
 ):
     """获取版本的架构元素树（层级结构）"""
@@ -223,6 +232,7 @@ async def list_elements_tree(
 @router.get("/elements/{element_id}", response_model=ArchElementInfo)
 async def get_element(
     element_id: str,
+    user_id: str = Query(..., description="用户ID"),
     db: AsyncSession = Depends(get_db),
 ):
     """获取单个架构元素详情"""
@@ -245,11 +255,12 @@ async def get_element(
 @router.post("/dependencies", response_model=ArchDependencyInfo)
 async def create_dependency(
     data: ArchDependencyCreate,
+    user_id: str = Query(..., description="用户ID"),
     db: AsyncSession = Depends(get_db),
 ):
     """新增架构依赖关系（element → element）"""
     try:
-        dep = await ArchitectureService.create_dependency(db, data)
+        dep = await ArchitectureService.create_dependency(db, data, user_id)
         if not dep:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -269,6 +280,7 @@ async def create_dependency(
 async def update_dependency(
     dependency_id: str,
     data: ArchDependencyUpdate,
+    user_id: str = Query(..., description="用户ID"),
     db: AsyncSession = Depends(get_db),
 ):
     """更新架构依赖"""
@@ -289,6 +301,7 @@ async def update_dependency(
 @router.delete("/dependencies/{dependency_id}")
 async def delete_dependency(
     dependency_id: str,
+    user_id: str = Query(..., description="用户ID"),
     db: AsyncSession = Depends(get_db),
 ):
     """删除架构依赖"""
@@ -309,6 +322,7 @@ async def delete_dependency(
 @router.get("/versions/{version_id}/dependencies", response_model=list[ArchDependencyInfo])
 async def list_dependencies(
     version_id: str,
+    user_id: str = Query(..., description="用户ID"),
     db: AsyncSession = Depends(get_db),
 ):
     """获取版本的架构依赖列表"""

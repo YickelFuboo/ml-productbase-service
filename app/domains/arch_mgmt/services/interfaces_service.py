@@ -24,7 +24,7 @@ class InterfacesService:
     # ==================== Interface ====================
 
     @staticmethod
-    async def create_interface(session: AsyncSession, data: ArchInterfaceCreate) -> Optional[ArchInterface]:
+    async def create_interface(session: AsyncSession, data: ArchInterfaceCreate, user_id: str) -> Optional[ArchInterface]:
         if data.interface_category == ArchInterfaceCategory.PHYSICAL.value:
             if not data.interface_type:
                 return None
@@ -44,7 +44,7 @@ class InterfacesService:
             id=str(uuid.uuid4()),
             version_id=data.version_id,
             interface_category=data.interface_category,
-            parent_id=data.parent_id,
+            parent_id=data.parent_id if data.parent_id else None,
             name=data.name,
             code=data.code,
             description=data.description,
@@ -53,6 +53,8 @@ class InterfacesService:
             constraints=data.constraints,
             interface_type=data.interface_type,
             tech_stack=data.tech_stack,
+            create_user_id=user_id,
+            owner_id=user_id,
             created_at=datetime.utcnow(),
             updated_at=datetime.utcnow(),
         )
@@ -70,6 +72,8 @@ class InterfacesService:
         if not interface:
             return None
         update_data = data.model_dump(exclude_unset=True)
+        if "parent_id" in update_data and update_data["parent_id"] == "":
+            update_data["parent_id"] = None
         for k, v in update_data.items():
             setattr(interface, k, v)
         interface.updated_at = datetime.utcnow()

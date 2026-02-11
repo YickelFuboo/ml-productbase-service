@@ -10,6 +10,7 @@ from app.domains.arch_mgmt.models import decision
 from app.domains.arch_mgmt.models import interfaces
 from app.domains.arch_mgmt.models import build
 from app.domains.arch_mgmt.models import deployment
+from app.domains.scene_mgmt.models import scene
 from app.infrastructure.database.models_base import Base
 
 config = context.config

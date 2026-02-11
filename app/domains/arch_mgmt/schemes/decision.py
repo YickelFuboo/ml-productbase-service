@@ -42,6 +42,7 @@ class ArchDecisionInfo(BaseModel):
     consequences: Optional[str] = None
     alternatives_considered: Optional[str] = None
     supersedes_id: Optional[str] = None
+    create_user_id: Optional[str] = None
     created_at: datetime
     updated_at: Optional[datetime] = None
 

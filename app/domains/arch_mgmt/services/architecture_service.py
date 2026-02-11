@@ -26,7 +26,7 @@ class ArchitectureService:
     # ==================== Overview ====================
 
     @staticmethod
-    async def create_overview(session: AsyncSession, data: ArchOverviewCreate) -> ArchOverview:
+    async def create_overview(session: AsyncSession, data: ArchOverviewCreate, user_id: str) -> ArchOverview:
         section_key = data.section_key or "main"
         existing = await ArchitectureService.get_overview(session, data.version_id, section_key)
         if existing:
@@ -36,6 +36,8 @@ class ArchitectureService:
             version_id=data.version_id,
             section_key=section_key,
             content=data.content,
+            create_user_id=user_id,
+            owner_id=user_id,
             created_at=datetime.utcnow(),
             updated_at=datetime.utcnow(),
         )
@@ -54,6 +56,8 @@ class ArchitectureService:
             return None
         if data.content is not None:
             overview.content = data.content
+        if data.owner_id is not None:
+            overview.owner_id = data.owner_id
         overview.updated_at = datetime.utcnow()
         await session.commit()
         await session.refresh(overview)
@@ -81,11 +85,11 @@ class ArchitectureService:
     # ==================== Element ====================
 
     @staticmethod
-    async def create_element(session: AsyncSession, data: ArchElementCreate) -> ArchElement:
+    async def create_element(session: AsyncSession, data: ArchElementCreate, user_id: str) -> ArchElement:
         elem = ArchElement(
             id=str(uuid.uuid4()),
             version_id=data.version_id,
-            parent_id=data.parent_id,
+            parent_id=data.parent_id if data.parent_id else None,
             element_type=data.element_type,
             name=data.name,
             code=data.code,
@@ -97,6 +101,8 @@ class ArchitectureService:
             quality_attributes=data.quality_attributes,
             constraints=data.constraints,
             specifications=data.specifications,
+            create_user_id=user_id,
+            owner_id=user_id,
             created_at=datetime.utcnow(),
             updated_at=datetime.utcnow(),
         )
@@ -114,6 +120,8 @@ class ArchitectureService:
         if not elem:
             return None
         update_data = data.model_dump(exclude_unset=True)
+        if "parent_id" in update_data and update_data["parent_id"] == "":
+            update_data["parent_id"] = None
         for k, v in update_data.items():
             setattr(elem, k, v)
         elem.updated_at = datetime.utcnow()
@@ -174,7 +182,7 @@ class ArchitectureService:
     # ==================== Dependency ====================
 
     @staticmethod
-    async def create_dependency(session: AsyncSession, data: ArchDependencyCreate) -> Optional[ArchDependency]:
+    async def create_dependency(session: AsyncSession, data: ArchDependencyCreate, user_id: str) -> Optional[ArchDependency]:
         src = await ArchitectureService.get_element_by_id(session, data.source_element_id)
         if not src or src.version_id != data.version_id:
             return None
@@ -188,6 +196,8 @@ class ArchitectureService:
             target_element_id=data.target_element_id,
             dependency_type=data.dependency_type,
             description=data.description,
+            create_user_id=user_id,
+            owner_id=user_id,
             created_at=datetime.utcnow(),
         )
         session.add(dep)
@@ -207,6 +217,8 @@ class ArchitectureService:
             dep.dependency_type = data.dependency_type
         if data.description is not None:
             dep.description = data.description
+        if data.owner_id is not None:
+            dep.owner_id = data.owner_id
         await session.commit()
         await session.refresh(dep)
         return dep

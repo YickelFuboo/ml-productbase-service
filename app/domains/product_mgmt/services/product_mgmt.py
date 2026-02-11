@@ -21,6 +21,7 @@ class ProductMgmtService:
                 description=data.description or None,
                 product_define=data.product_define or None,
                 create_user_id=user_id,
+                owner_id=user_id,
                 created_at=datetime.utcnow(),
                 updated_at=datetime.utcnow(),
             )
@@ -60,6 +61,8 @@ class ProductMgmtService:
                 record.description = data.description
             if data.product_define is not None:
                 record.product_define = data.product_define
+            if data.owner_id is not None:
+                record.owner_id = data.owner_id
             record.updated_at = datetime.utcnow()
             await db.commit()
             await db.refresh(record)
@@ -169,6 +172,8 @@ class ProductMgmtService:
                 raise ValueError("无权限修改该版本")
             if data.name is not None:
                 record.name = data.name
+            if data.owner_id is not None:
+                record.owner_id = data.owner_id
             record.updated_at = datetime.utcnow()
             await db.commit()
             await db.refresh(record)

@@ -19,6 +19,7 @@ class ArchOverviewCreate(BaseModel):
 
 class ArchOverviewUpdate(BaseModel):
     content: Optional[str] = Field(None, description="该节内容")
+    owner_id: Optional[str] = Field(None, description="数据Owner ID")
 
 
 class ArchOverviewInfo(BaseModel):
@@ -26,6 +27,8 @@ class ArchOverviewInfo(BaseModel):
     version_id: str
     section_key: str
     content: Optional[str] = None
+    create_user_id: Optional[str] = None
+    owner_id: Optional[str] = None
     created_at: datetime
     updated_at: Optional[datetime] = None
 
@@ -52,6 +55,7 @@ class ArchElementUpdate(BaseModel):
     parent_id: Optional[str] = None
     element_type: Optional[str] = None
     name: Optional[str] = None
+    owner_id: Optional[str] = None
     code: Optional[str] = None
     code_repo_url: Optional[str] = None
     code_repo_path: Optional[str] = None
@@ -69,6 +73,8 @@ class ArchElementInfo(BaseModel):
     parent_id: Optional[str] = None
     element_type: str
     name: str
+    create_user_id: Optional[str] = None
+    owner_id: Optional[str] = None
     code: Optional[str] = None
     code_repo_url: Optional[str] = None
     code_repo_path: Optional[str] = None
@@ -102,6 +108,7 @@ class ArchDependencyCreate(BaseModel):
 class ArchDependencyUpdate(BaseModel):
     dependency_type: Optional[str] = None
     description: Optional[str] = None
+    owner_id: Optional[str] = None
 
 
 class ArchDependencyInfo(BaseModel):
@@ -111,6 +118,8 @@ class ArchDependencyInfo(BaseModel):
     target_element_id: str
     dependency_type: Optional[str] = None
     description: Optional[str] = None
+    create_user_id: Optional[str] = None
+    owner_id: Optional[str] = None
     created_at: datetime
 
     model_config = ConfigDict(from_attributes=True)

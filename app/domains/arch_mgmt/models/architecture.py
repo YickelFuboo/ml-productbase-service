@@ -5,7 +5,7 @@ import uuid
 from datetime import datetime
 from enum import Enum
 from sqlalchemy import Column, String, DateTime, Text, ForeignKey, Index
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, backref
 from app.infrastructure.database.models_base import Base
 
 
@@ -93,7 +93,10 @@ class ArchOverview(Base):
 
     section_key = Column(String(64), nullable=False, default="main", comment="章节键，标准键见 ArchOverviewSectionKey")
     content = Column(Text, nullable=True, comment="内容，支持 Markdown")
-    
+
+    create_user_id = Column(String(36), nullable=True, index=True, comment="创建人ID")
+    owner_id = Column(String(36), nullable=True, index=True, comment="数据Owner ID，默认创建人")
+
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False, comment="创建时间")
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=True, comment="更新时间")
 
@@ -105,6 +108,8 @@ class ArchOverview(Base):
             "version_id": self.version_id,
             "section_key": self.section_key,
             "content": self.content,
+            "create_user_id": self.create_user_id,
+            "owner_id": self.owner_id,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }
@@ -116,7 +121,7 @@ class ArchElement(Base):
 
     id = Column(String(36), primary_key=True, default=lambda: str(uuid.uuid4()), comment="ID")
     version_id = Column(String(36), ForeignKey("version_record.id", ondelete="CASCADE"), nullable=False, index=True, comment="版本ID")
-    parent_id = Column(String(36), ForeignKey("arch_element.id", ondelete="SET NULL"), nullable=True, index=True, comment="父元素ID")
+    parent_id = Column(String(36), ForeignKey("arch_element.id", ondelete="CASCADE"), nullable=True, index=True, comment="父元素ID")
 
     element_type = Column(String(32), nullable=False, index=True, comment=f"类型：{'|'.join(ArchElementType.values())}")
     name = Column(String(255), nullable=False, index=True, comment="名称")
@@ -131,10 +136,13 @@ class ArchElement(Base):
     constraints = Column(Text, nullable=True, comment="约束")
     specifications = Column(Text, nullable=True, comment="规格")
 
+    create_user_id = Column(String(36), nullable=True, index=True, comment="创建人ID")
+    owner_id = Column(String(36), nullable=True, index=True, comment="数据Owner ID，默认创建人")
+
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False, comment="创建时间")
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=True, comment="更新时间")
 
-    parent = relationship("ArchElement", remote_side="ArchElement.id", backref="children")
+    parent = relationship("ArchElement", remote_side="ArchElement.id", backref=backref("children", passive_deletes=True))
     out_deps = relationship("ArchDependency", foreign_keys="ArchDependency.source_element_id", back_populates="source_element", cascade="all, delete-orphan")
     in_deps = relationship("ArchDependency", foreign_keys="ArchDependency.target_element_id", back_populates="target_element", cascade="all, delete-orphan")
 
@@ -156,6 +164,8 @@ class ArchElement(Base):
             "quality_attributes": self.quality_attributes,
             "constraints": self.constraints,
             "specifications": self.specifications,
+            "create_user_id": self.create_user_id,
+            "owner_id": self.owner_id,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }
@@ -172,6 +182,9 @@ class ArchDependency(Base):
     target_element_id = Column(String(36), ForeignKey("arch_element.id", ondelete="CASCADE"), nullable=False, index=True, comment="目标架构元素ID")
     dependency_type = Column(String(48), nullable=True, index=True, comment="关系类型：calls|reads_data_from|writes_data_to|depends_on")
     description = Column(Text, nullable=True, comment="关系说明")
+
+    create_user_id = Column(String(36), nullable=True, index=True, comment="创建人ID")
+    owner_id = Column(String(36), nullable=True, index=True, comment="数据Owner ID，默认创建人")
 
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False, comment="创建时间")
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=True, comment="更新时间")
@@ -195,6 +208,8 @@ class ArchDependency(Base):
             "target_element_id": self.target_element_id,
             "dependency_type": self.dependency_type,
             "description": self.description,
+            "create_user_id": self.create_user_id,
+            "owner_id": self.owner_id,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }

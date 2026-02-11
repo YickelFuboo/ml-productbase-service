@@ -2,7 +2,7 @@
 构建视图 DTO：BuildArtifact、ElementToArtifact、ArtifactToArtifact
 """
 from datetime import datetime
-from typing import Optional
+from typing import List, Optional
 from pydantic import BaseModel, ConfigDict, Field
 from app.domains.arch_mgmt.models.build import ArchBuildArtifactType
 
@@ -22,6 +22,7 @@ class ArchBuildArtifactUpdate(BaseModel):
     build_command: Optional[str] = None
     build_environment: Optional[str] = None
     description: Optional[str] = None
+    owner_id: Optional[str] = None
 
 
 class ArchBuildArtifactInfo(BaseModel):
@@ -32,6 +33,8 @@ class ArchBuildArtifactInfo(BaseModel):
     build_command: Optional[str] = None
     build_environment: Optional[str] = None
     description: Optional[str] = None
+    create_user_id: Optional[str] = None
+    owner_id: Optional[str] = None
     created_at: datetime
     updated_at: Optional[datetime] = None
 
@@ -88,3 +91,10 @@ class ArchElementToArtifactInfo(BaseModel):
     updated_at: Optional[datetime] = None
 
     model_config = ConfigDict(from_attributes=True)
+
+
+class ArchBuildArtifactTree(ArchBuildArtifactInfo):
+    children: List["ArchBuildArtifactTree"] = Field(default_factory=list, description="子构建产物（输入产物）")
+
+
+ArchBuildArtifactTree.model_rebuild()

@@ -23,15 +23,17 @@ class DeploymentService:
     # ==================== DeploymentUnit ====================
 
     @staticmethod
-    async def create_deployment_unit(session: AsyncSession, data: ArchDeploymentUnitCreate) -> ArchDeploymentUnit:
+    async def create_deployment_unit(session: AsyncSession, data: ArchDeploymentUnitCreate, user_id: str) -> ArchDeploymentUnit:
         unit = ArchDeploymentUnit(
             id=str(uuid.uuid4()),
             version_id=data.version_id,
-            parent_unit_id=data.parent_unit_id,
+            parent_unit_id=data.parent_unit_id if data.parent_unit_id else None,
             name=data.name,
             unit_type=data.unit_type,
             description=data.description,
             deployment_config=data.deployment_config,
+            create_user_id=user_id,
+            owner_id=user_id,
             created_at=datetime.utcnow(),
             updated_at=datetime.utcnow(),
         )
@@ -49,6 +51,8 @@ class DeploymentService:
         if not unit:
             return None
         update_data = data.model_dump(exclude_unset=True)
+        if "parent_unit_id" in update_data and update_data["parent_unit_id"] == "":
+            update_data["parent_unit_id"] = None
         for k, v in update_data.items():
             setattr(unit, k, v)
         unit.updated_at = datetime.utcnow()

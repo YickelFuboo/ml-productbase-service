@@ -9,6 +9,7 @@ from app.domains.arch_mgmt.schemes.build import (
     ArchBuildArtifactCreate,
     ArchBuildArtifactUpdate,
     ArchBuildArtifactInfo,
+    ArchBuildArtifactTree,
     ArchElementToArtifactCreate,
     ArchElementToArtifactUpdate,
     ArchElementToArtifactInfo,
@@ -22,7 +23,7 @@ router = APIRouter(prefix="/api/arch", tags=["构建视图"])
 
 
 @router.get("/build-artifact-types")
-async def get_build_artifact_types():
+async def get_build_artifact_types(user_id: str = Query(..., description="用户ID")):
     """获取构建产物类型（jar/war/docker_image/binary 等）"""
     return {"types": ArchBuildArtifactType.values()}
 
@@ -32,11 +33,12 @@ async def get_build_artifact_types():
 @router.post("/build-artifacts", response_model=ArchBuildArtifactInfo)
 async def create_build_artifact(
     data: ArchBuildArtifactCreate,
+    user_id: str = Query(..., description="用户ID"),
     db: AsyncSession = Depends(get_db),
 ):
     """新增构建产物"""
     try:
-        artifact = await BuildService.create_build_artifact(db, data)
+        artifact = await BuildService.create_build_artifact(db, data, user_id)
         return ArchBuildArtifactInfo.model_validate(artifact)
     except Exception as e:
         raise HTTPException(
@@ -49,6 +51,7 @@ async def create_build_artifact(
 async def update_build_artifact(
     artifact_id: str,
     data: ArchBuildArtifactUpdate,
+    user_id: str = Query(..., description="用户ID"),
     db: AsyncSession = Depends(get_db),
 ):
     """更新构建产物"""
@@ -69,6 +72,7 @@ async def update_build_artifact(
 @router.delete("/build-artifacts/{artifact_id}")
 async def delete_build_artifact(
     artifact_id: str,
+    user_id: str = Query(..., description="用户ID"),
     db: AsyncSession = Depends(get_db),
 ):
     """删除构建产物"""
@@ -89,6 +93,7 @@ async def delete_build_artifact(
 @router.get("/versions/{version_id}/build-artifacts", response_model=list[ArchBuildArtifactInfo])
 async def list_build_artifacts(
     version_id: str,
+    user_id: str = Query(..., description="用户ID"),
     artifact_type: Optional[str] = Query(None, description="按产物类型过滤"),
     db: AsyncSession = Depends(get_db),
 ):
@@ -103,9 +108,27 @@ async def list_build_artifacts(
         )
 
 
+@router.get("/versions/{version_id}/build-artifacts/tree", response_model=list[ArchBuildArtifactTree])
+async def list_build_artifacts_tree(
+    version_id: str,
+    user_id: str = Query(..., description="用户ID"),
+    db: AsyncSession = Depends(get_db),
+):
+    """获取版本的构建产物树结构（父节点是产物，子节点是输入）"""
+    try:
+        tree = await BuildService.get_build_artifacts_tree(db, version_id)
+        return tree
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"获取构建产物树失败: {str(e)}",
+        )
+
+
 @router.get("/build-artifacts/{artifact_id}", response_model=ArchBuildArtifactInfo)
 async def get_build_artifact(
     artifact_id: str,
+    user_id: str = Query(..., description="用户ID"),
     db: AsyncSession = Depends(get_db),
 ):
     """获取构建产物详情"""
@@ -152,6 +175,7 @@ async def create_element_to_artifact(
 async def update_element_to_artifact(
     element_artifact_id: str,
     data: ArchElementToArtifactUpdate,
+    user_id: str = Query(..., description="用户ID"),
     db: AsyncSession = Depends(get_db),
 ):
     """更新架构元素-构建产物映射"""
@@ -172,6 +196,7 @@ async def update_element_to_artifact(
 @router.delete("/element-to-artifacts/{element_artifact_id}")
 async def delete_element_to_artifact(
     element_artifact_id: str,
+    user_id: str = Query(..., description="用户ID"),
     db: AsyncSession = Depends(get_db),
 ):
     """删除架构元素-构建产物映射"""
@@ -192,6 +217,7 @@ async def delete_element_to_artifact(
 @router.get("/versions/{version_id}/element-to-artifacts", response_model=list[ArchElementToArtifactInfo])
 async def list_element_to_artifacts(
     version_id: str,
+    user_id: str = Query(..., description="用户ID"),
     element_id: Optional[str] = Query(None, description="按架构元素ID过滤"),
     build_artifact_id: Optional[str] = Query(None, description="按构建产物ID过滤"),
     db: AsyncSession = Depends(get_db),
@@ -212,6 +238,7 @@ async def list_element_to_artifacts(
 @router.post("/artifact-to-artifacts", response_model=ArchArtifactToArtifactInfo)
 async def create_artifact_to_artifact(
     data: ArchArtifactToArtifactCreate,
+    user_id: str = Query(..., description="用户ID"),
     db: AsyncSession = Depends(get_db),
 ):
     """新增构建产物关系（多个输入产物构建成一个输出产物）"""
@@ -236,6 +263,7 @@ async def create_artifact_to_artifact(
 async def update_artifact_to_artifact(
     artifact_to_artifact_id: str,
     data: ArchArtifactToArtifactUpdate,
+    user_id: str = Query(..., description="用户ID"),
     db: AsyncSession = Depends(get_db),
 ):
     """更新构建产物关系"""
@@ -256,6 +284,7 @@ async def update_artifact_to_artifact(
 @router.delete("/artifact-to-artifacts/{artifact_to_artifact_id}")
 async def delete_artifact_to_artifact(
     artifact_to_artifact_id: str,
+    user_id: str = Query(..., description="用户ID"),
     db: AsyncSession = Depends(get_db),
 ):
     """删除构建产物关系"""
@@ -276,6 +305,7 @@ async def delete_artifact_to_artifact(
 @router.get("/versions/{version_id}/artifact-to-artifacts", response_model=list[ArchArtifactToArtifactInfo])
 async def list_artifact_to_artifacts(
     version_id: str,
+    user_id: str = Query(..., description="用户ID"),
     input_artifact_id: Optional[str] = Query(None, description="按输入构建产物ID过滤"),
     target_artifact_id: Optional[str] = Query(None, description="按目标构建产物ID过滤"),
     db: AsyncSession = Depends(get_db),

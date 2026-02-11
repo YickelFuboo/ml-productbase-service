@@ -15,7 +15,7 @@ class DecisionService:
     """架构决策服务（ADR - Architecture Decision Record）"""
 
     @staticmethod
-    async def create_decision(session: AsyncSession, data: ArchDecisionCreate) -> ArchDecision:
+    async def create_decision(session: AsyncSession, data: ArchDecisionCreate, user_id: str) -> ArchDecision:
         rec = ArchDecision(
             id=str(uuid.uuid4()),
             version_id=data.version_id,
@@ -27,6 +27,7 @@ class DecisionService:
             consequences=data.consequences,
             alternatives_considered=data.alternatives_considered,
             supersedes_id=data.supersedes_id,
+            create_user_id=user_id,
             created_at=datetime.utcnow(),
             updated_at=datetime.utcnow(),
         )

@@ -15,6 +15,7 @@ class UpdateProduct(BaseModel):
     name: Optional[str] = Field(None, description="产品名称")
     description: Optional[str] = Field(None, description="描述")
     product_define: Optional[str] = Field(None, description="产品定义，一般为MD文档")
+    owner_id: Optional[str] = Field(None, description="数据Owner ID")
 
 
 class ProductInfo(BaseModel):
@@ -24,6 +25,7 @@ class ProductInfo(BaseModel):
     description: Optional[str] = Field(None, description="描述")
     product_define: Optional[str] = Field(None, description="产品定义，一般为MD文档")
     create_user_id: str = Field(..., description="创建人ID")
+    owner_id: Optional[str] = Field(None, description="数据Owner ID")
     created_at: Optional[datetime] = Field(None, description="创建时间")
     updated_at: Optional[datetime] = Field(None, description="更新时间")
 
@@ -37,6 +39,7 @@ class ProductWithVersionsInfo(BaseModel):
     description: Optional[str] = Field(None, description="描述")
     product_define: Optional[str] = Field(None, description="产品定义")
     create_user_id: str = Field(..., description="创建人ID")
+    owner_id: Optional[str] = Field(None, description="数据Owner ID")
     created_at: Optional[datetime] = Field(None, description="创建时间")
     updated_at: Optional[datetime] = Field(None, description="更新时间")
     versions: List["VersionInfo"] = Field(default_factory=list, description="该产品下的版本列表")
@@ -53,6 +56,7 @@ class CreateVersion(BaseModel):
 class UpdateVersion(BaseModel):
     """修改版本"""
     name: Optional[str] = Field(None, description="版本名称")
+    owner_id: Optional[str] = Field(None, description="数据Owner ID")
 
 
 class VersionInfo(BaseModel):
@@ -61,6 +65,7 @@ class VersionInfo(BaseModel):
     name: str = Field(..., description="版本名称")
     product_id: str = Field(..., description="所属产品ID")
     create_user_id: str = Field(..., description="创建人ID")
+    owner_id: Optional[str] = Field(None, description="数据Owner ID")
     created_at: Optional[datetime] = Field(None, description="创建时间")
     updated_at: Optional[datetime] = Field(None, description="更新时间")
 

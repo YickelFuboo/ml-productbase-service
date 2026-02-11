@@ -5,7 +5,7 @@ import uuid
 from datetime import datetime
 from enum import Enum
 from sqlalchemy import Column, String, DateTime, Text, ForeignKey, Integer, Index
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, backref
 from app.infrastructure.database.models_base import Base
 
 
@@ -38,10 +38,14 @@ class ArchDeploymentUnit(Base):
     unit_type = Column(String(32), nullable=False, index=True, comment=f"单元类型：{'|'.join(ArchDeploymentUnitType.values())}")
     description = Column(Text, nullable=True, comment="说明")
     deployment_config = Column(Text, nullable=True, comment="部署配置（JSON）")
+
+    create_user_id = Column(String(36), nullable=True, index=True, comment="创建人ID")
+    owner_id = Column(String(36), nullable=True, index=True, comment="数据Owner ID，默认创建人")
+
     created_at = Column(DateTime, default=datetime.utcnow, nullable=False, comment="创建时间")
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow, nullable=True, comment="更新时间")
 
-    parent_unit = relationship("ArchDeploymentUnit", remote_side="ArchDeploymentUnit.id", backref="child_units")
+    parent_unit = relationship("ArchDeploymentUnit", remote_side="ArchDeploymentUnit.id", backref=backref("child_units", passive_deletes=True))
     artifact_relations = relationship("ArchArtifactToDeployment", back_populates="deployment_unit", cascade="all, delete-orphan")
 
     __table_args__ = (Index("idx_arch_deploy_unit_version_type", "version_id", "unit_type"),)
@@ -55,6 +59,8 @@ class ArchDeploymentUnit(Base):
             "unit_type": self.unit_type,
             "description": self.description,
             "deployment_config": self.deployment_config,
+            "create_user_id": self.create_user_id,
+            "owner_id": self.owner_id,
             "created_at": self.created_at.isoformat() if self.created_at else None,
             "updated_at": self.updated_at.isoformat() if self.updated_at else None,
         }
