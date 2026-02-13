@@ -4,7 +4,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.infrastructure.database import get_db
 from app.domains.arch_mgmt.services.arch_doc_service import ArchDocService
 
-router = APIRouter(prefix="/api/arch", tags=["架构文档"])
+router = APIRouter(prefix="/arch", tags=["架构文档"])
 
 
 @router.get("/versions/{version_id}/doc", response_class=PlainTextResponse)

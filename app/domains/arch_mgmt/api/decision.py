@@ -9,7 +9,7 @@ from app.domains.arch_mgmt.schemes.decision import (
 )
 from app.domains.arch_mgmt.services import DecisionService
 
-router = APIRouter(prefix="/api/arch", tags=["架构决策"])
+router = APIRouter(prefix="/arch", tags=["架构决策"])
 
 
 @router.get("/decision-statuses")

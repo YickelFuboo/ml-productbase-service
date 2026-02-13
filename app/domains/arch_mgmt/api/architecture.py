@@ -21,7 +21,7 @@ from app.domains.arch_mgmt.schemes.architecture import (
 )
 from app.domains.arch_mgmt.services import ArchitectureService
 
-router = APIRouter(prefix="/api/arch", tags=["逻辑架构视图"])
+router = APIRouter(prefix="/arch", tags=["逻辑架构视图"])
 
 
 @router.get("/overview-section-keys")

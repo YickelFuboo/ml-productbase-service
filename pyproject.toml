@@ -52,8 +52,8 @@ elasticsearch = "==8.12.1"
 elasticsearch-dsl = "==8.12.0"
 opensearch-py = "==2.7.1"
 
-# 文件存储（minio 依赖 pycryptodome 提供 Crypto 模块，版本需兼容 volcengine）
-pycryptodome = ">=3.9.9"
+# 文件存储（minio / qianfan 依赖 pycryptodome 提供 Crypto 模块）
+pycryptodome = "^3.23.0"
 azure-storage-blob = "==12.22.0"
 azure-identity = "==1.17.1"
 azure-storage-file-datalake = "==12.16.0"
@@ -78,7 +78,6 @@ qianfan = "==0.4.6"
 replicate = "==0.31.0"
 tencentcloud-sdk-python = "==3.0.1215"
 vertexai = "==1.64.0"
-volcengine = "==1.0.146"
 voyageai = "==0.2.3"
 zhipuai = "==2.0.1"
 google-generativeai = ">=0.8.1,<0.9.0"
@@ -203,6 +202,7 @@ python-pptx = ">=1.0.2"
 reportlab = ">=4.4.1"
 requests = ">=2.32.2"
 requests-toolbelt = ">=1.0.0"
+psycopg = {extras = ["binary"], version = "^3.3.2"}
 
 [build-system]
 requires = ["poetry-core"]

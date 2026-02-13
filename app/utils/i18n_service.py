@@ -1,5 +1,5 @@
+import logging
 from typing import Dict, Any
-from app.utils.logger import logger
 
 
 class I18nService:
@@ -67,14 +67,14 @@ class I18nService:
                 try:
                     message = message.format(**kwargs)
                 except (KeyError, ValueError) as e:
-                    logger.warning(f"消息格式化失败: {key}, 语言: {language}, 错误: {e}")
+                    logging.warning(f"消息格式化失败: {key}, 语言: {language}, 错误: {e}")
                     # 如果格式化失败，返回原始消息
                     pass
             
             return message
             
         except Exception as e:
-            logger.error(f"获取国际化消息失败: {key}, 语言: {language}, 错误: {e}")
+            logging.error(f"获取国际化消息失败: {key}, 语言: {language}, 错误: {e}")
             return key
     
     def get_error_message(self, error_type: str, language: str = "zh-CN", **kwargs) -> str:

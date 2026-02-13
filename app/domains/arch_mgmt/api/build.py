@@ -19,7 +19,7 @@ from app.domains.arch_mgmt.schemes.build import (
 )
 from app.domains.arch_mgmt.services import BuildService
 
-router = APIRouter(prefix="/api/arch", tags=["构建视图"])
+router = APIRouter(prefix="/arch", tags=["构建视图"])
 
 
 @router.get("/build-artifact-types")

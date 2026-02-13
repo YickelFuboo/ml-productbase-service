@@ -15,11 +15,12 @@ from app.infrastructure.database import close_db, health_check_db
 from app.infrastructure.storage import STORAGE_CONN
 from app.infrastructure.vector_store import VECTOR_STORE_CONN
 from app.infrastructure.redis import REDIS_CONN
-from app.infrastructure.auth.jwt_middleware import jwt_middleware
+from app.utils.auth.jwt_middleware import jwt_middleware
 from app.domains.product_mgmt import product_router
 from app.domains.git_auth_mgmt import git_auth_router
 from app.domains.arch_mgmt import arch_mgmt_router
 from app.domains.scene_mgmt import scene_mgmt_router
+from app.domains.kb_mgmt import kb_mgmt_router
 
 
 # 创建FastAPI应用
@@ -49,6 +50,7 @@ app.include_router(product_router, prefix="/api/v1", tags=["产品管理"])
 app.include_router(git_auth_router, prefix="/api/v1", tags=["Git认证管理"])
 app.include_router(arch_mgmt_router, prefix="/api/v1", tags=["架构管理"])
 app.include_router(scene_mgmt_router, prefix="/api/v1", tags=["场景管理"])
+app.include_router(kb_mgmt_router, prefix="/api/v1", tags=["知识库管理"])
 
 #==================================
 # 配置中间件
